@@ -1,0 +1,49 @@
+version: 1
+disable_existing_loggers: true
+incremental: false
+
+formatters:
+  default:
+    format: '%(asctime)-8s %(name)-8s %(funcName)-16s:%(lineno)-4d %(levelname)-7s %(message)s'
+
+handlers:
+  console:
+    class : logging.StreamHandler
+    formatter: default
+    stream  : ext://sys.stdout
+  file:
+    class : logging.handlers.RotatingFileHandler
+    formatter: default
+    filename: arsbot.log
+    maxBytes: 1024
+    backupCount: 3
+
+loggers:
+  arsbot:
+    handlers: [console]
+    propagate: false
+    level: DEBUG
+  discord.client:
+    handlers: [console]
+    propagate: false
+    level: WARNING
+  discord.gateway:
+    handlers: [console]
+    propagate: false
+    level: WARNING
+  discord.http:
+    handlers: [console]
+    propagate: false
+    level: WARNING
+  # sqlalchemy:
+  #   handlers: [console]
+  #   propagate: true
+  #   level: DEBUG
+  # sqlalchemy.engine:
+  #   handlers: [console]
+  #   propagate: true
+  #   level: INFO
+
+root:
+  handlers: [console]
+  level: DEBUG

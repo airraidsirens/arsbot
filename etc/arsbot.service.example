@@ -1,0 +1,17 @@
+[Unit]
+Description=arsbot
+After=syslog.target network.target
+
+[Service]
+Type=simple
+User=static
+WorkingDirectory=/path/to/arsbot
+ExecStart=/path/to/arsbot/.venv/bin/arsbot
+Restart=always
+EnvironmentFile=/path/to/arsbot.env
+StandardError=journal
+StandardOutput=journal
+StandardInput=null
+
+[Install]
+WantedBy=multi-user.target

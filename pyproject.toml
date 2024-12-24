@@ -1,0 +1,83 @@
+[project]
+name = "arsbot"
+version = "1.2.0"
+description = "tools and automation with bot interface for airraidsirens.net"
+readme = "README.md"
+requires-python = ">=3.10.15,<3.14.0"
+authors = [
+  {name = "Matt Ullman", email = "mat@airraidsirens.net"},
+]
+maintainers = [
+  {name = "Matt Ullman", email = "mat@airraidsirens.net"},
+]
+keywords = ["automation", "tools", "bot", "phpbb", "mediawiki"]
+license = {file = "LICENSE"}
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Private :: Do Not Upload",
+]
+
+dependencies = [
+    "alembic>=1.14.0",
+    "arrow>=1.3.0",
+    "beautifulsoup4>=4.12.3",
+    "discord-py>=2.4.0",
+    "msgpack>=1.1.0",
+    "python-dotenv>=1.0.1",
+    "pyyaml>=6.0.2",
+    "requests>=2.32.3",
+    "sentry-sdk>=2.19.0",
+    "sqlalchemy>=2.0.36",
+]
+
+[dependency-groups]
+dev = [
+    "coverage>=7.6.8",
+    "flake8>=7.1.1",
+    "pytest-asyncio>=0.24.0",
+    "pytest>=8.3.3",
+    "responses>=0.25.3",
+    "ruff>=0.8.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.scripts]
+arsbot = "arsbot:main"
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
+minversion = "6.0"
+addopts = "-ra -q"
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+command_line = "-m pytest"
+source = ["src"]
+
+[tool.coverage.report]
+omit = ["tests"]
+show_missing = true
+skip_covered = true
+skip_empty = true
+
+[tool.ruff]
+include = ["pyproject.toml", "src/**/*.py", "tests/**/*.py"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.ruff.format]
+indent-style = "space"
+line-ending = "auto"
+quote-style = "double"
+skip-magic-trailing-comma = false
