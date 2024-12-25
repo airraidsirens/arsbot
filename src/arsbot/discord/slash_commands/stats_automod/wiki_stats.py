@@ -54,7 +54,7 @@ def _get_spam_scores(session: Session, action: int):
 
     table = TextTable()
 
-    table.set_header("WIP AutoMod Stats")
+    table.set_header("AutoMod Stats")
     table.set_footer("End of Stats")
 
     table.add_key_value("action", action_str)

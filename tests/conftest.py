@@ -36,7 +36,7 @@ def bot_env_config():
         "DISCORD_FORUM_TOPIC_REQUESTS_STATS_CHANNEL_ID": "0000000000000000007",
         "DISCORD_FORUM_LOGS_CHANNEL_ID": "0000000000000000007",
         "ERROR_LOG_DISCORD_URL": "https://invalid",
-        "BOT_SQLALCHEMY_DATABASE_URI": "default",
+        "BOT_SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
         "ROLE_NAME": "default",
         "PHPBB_BASE_URL": "https://airraidsirens.net/forums",
         "PHPBB_USERNAME": "testuser",
