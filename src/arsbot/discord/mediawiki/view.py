@@ -3,7 +3,7 @@ import os
 
 import discord
 
-from ..lock import MESSAGE_LOCK
+from arsbot.core.lock import MESSAGE_LOCK
 
 
 log = logging.getLogger("arsbot")
