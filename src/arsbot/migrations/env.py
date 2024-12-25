@@ -24,7 +24,7 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from arsbot.discord.db import BotBase  # noqa
+from arsbot.models.base import BotBase  # noqa
 
 target_metadata = BotBase.metadata
 

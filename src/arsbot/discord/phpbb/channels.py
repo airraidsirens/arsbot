@@ -4,8 +4,8 @@ import os
 import discord
 from discord.errors import NotFound
 
-from ..db import bot_session
-from ..models import PhpbbPostRequest
+from arsbot.core.db import bot_session
+from arsbot.models import PhpbbPostRequest
 
 
 log = logging.getLogger("arsbot")

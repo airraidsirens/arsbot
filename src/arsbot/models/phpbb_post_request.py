@@ -1,6 +1,6 @@
 import sqlalchemy as sa
 
-from ..db import BotBase
+from .base import BotBase
 
 
 class PhpbbPostRequest(BotBase):

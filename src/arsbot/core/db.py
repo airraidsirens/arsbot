@@ -2,12 +2,7 @@ from contextlib import contextmanager
 import os
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Session
-
-
-class BotBase(DeclarativeBase):
-    pass
 
 
 @contextmanager

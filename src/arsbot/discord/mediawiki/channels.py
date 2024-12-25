@@ -4,8 +4,8 @@ import os
 import discord
 from discord.errors import NotFound
 
-from ..db import bot_session
-from ..models import MediaWikiAccountRequest
+from arsbot.core.db import bot_session
+from arsbot.models import MediaWikiAccountRequest
 
 
 log = logging.getLogger("arsbot")

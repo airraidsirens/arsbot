@@ -2,9 +2,10 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
-from arsbot.discord.db import BotBase, bot_session
+from arsbot.core.db import bot_session
+from arsbot.models import MediaWikiAccountRequest
+from arsbot.models.base import BotBase
 from arsbot.discord.slash_commands.stats_automod.wiki_stats import _get_spam_scores
-from arsbot.discord.models import MediaWikiAccountRequest
 from arsbot.utils.text_table import TextTable
 
 

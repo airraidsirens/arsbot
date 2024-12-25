@@ -6,10 +6,11 @@ import re
 import pytest
 import responses
 
-from arsbot.discord.db import BotBase, bot_session
-from arsbot.discord.mediawiki.moderate_account import handle_mediawiki_account
-from arsbot.discord import models as discord_models
+from arsbot.core.db import bot_session
 from arsbot.discord import utils as discord_utils
+from arsbot.discord.mediawiki.moderate_account import handle_mediawiki_account
+from arsbot.models import MediaWikiAccountRequest
+from arsbot.models.base import BotBase
 
 from tests.conftest import read_test_file
 
@@ -117,7 +118,7 @@ async def test_handle_mediawiki_account_unknown_request_id(
     with bot_session() as session:
         BotBase.metadata.create_all(session.bind)
 
-        request = discord_models.MediaWikiAccountRequest(
+        request = MediaWikiAccountRequest(
             id=1,
             acrid=2,
             username="username_value",
@@ -240,7 +241,7 @@ async def test_handle_mediawiki_handle_account_request(
     with bot_session() as session:
         BotBase.metadata.create_all(session.bind)
 
-        request = discord_models.MediaWikiAccountRequest(
+        request = MediaWikiAccountRequest(
             id=1,
             acrid=2,
             username="username_value",
@@ -354,7 +355,7 @@ async def test_handle_mediawiki_account_request_failed(
     with bot_session() as session:
         BotBase.metadata.create_all(session.bind)
 
-        request = discord_models.MediaWikiAccountRequest(
+        request = MediaWikiAccountRequest(
             id=1,
             acrid=2,
             username="username_value",

@@ -1,8 +1,9 @@
 import arrow
 import discord
 
-from ..db import bot_session
-from ..models import MediaWikiAccountRequest
+from arsbot.core.db import bot_session
+from arsbot.models import MediaWikiAccountRequest
+
 from ..utils import (
     send_to_debug,
     send_to_wiki_log,

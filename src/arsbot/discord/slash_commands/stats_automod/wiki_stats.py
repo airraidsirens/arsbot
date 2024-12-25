@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
 
-from ...db import bot_session
-from ...models import MediaWikiAccountRequest
+from arsbot.core.db import bot_session
+from arsbot.models import MediaWikiAccountRequest
+
 from ...mediawiki.automod import (
     SpamCategory,
     get_spam_categories_for_request,

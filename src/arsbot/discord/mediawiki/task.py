@@ -9,6 +9,9 @@ import discord
 from aiohttp.client_exceptions import ClientOSError
 from discord.errors import DiscordServerError
 
+from arsbot.core.db import bot_session
+from arsbot.models import MediaWikiAccountRequest
+
 from .automod import get_spam_categories_for_request
 from .channels import (
     get_requests_from_channel,
@@ -22,9 +25,7 @@ from ..const import (
     NON_BOT_CLEAR_FREQUENCY_SECONDS,
     SYNC_LOOP_DELAY,
 )
-from ..db import bot_session
 from ..lock import MESSAGE_LOCK
-from ..models import MediaWikiAccountRequest
 from ..utils import (
     delete_non_bot_messages,
     send_to_debug,

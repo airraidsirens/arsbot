@@ -3,8 +3,9 @@ import logging
 import arrow
 import discord
 
-from ..db import bot_session
-from ..models import PhpbbPostRequest
+from arsbot.core.db import bot_session
+from arsbot.models import PhpbbPostRequest
+
 from ..utils import (
     send_to_debug,
     send_to_forum_log,

@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
 
-from arsbot.discord.db import BotBase, bot_session
-from arsbot.discord.models import PhpbbPostRequest
+from arsbot.core.db import bot_session
+from arsbot.models import PhpbbPostRequest
+from arsbot.models.base import BotBase
 
 
 def test_validate_config(bot_data_dir, bot_env_config):
