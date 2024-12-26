@@ -6,9 +6,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from .config import validate_config
+from .core.config import validate_config
+from .core.logging import setup_loggers
 from .discord.run import runbot
-from .logging import setup_loggers
 
 log = logging.getLogger("arsbot")
 

@@ -1,6 +1,6 @@
 import logging
 
-from arsbot.logging import setup_loggers
+from arsbot.core.logging import setup_loggers
 
 
 TEST_LOGGING_CONFIG = """
