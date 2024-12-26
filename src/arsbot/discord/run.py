@@ -83,8 +83,7 @@ async def main_io_loop():
 
 
 async def send_connect_message(local_client):
-    basic_message = f"Connected to Discord. instance_id:{instance_id}"
-    log.info(basic_message)
+    log.info(f"Connected to Discord. instance_id:{instance_id}")
 
     table = TextTable()
 

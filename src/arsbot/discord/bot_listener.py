@@ -31,8 +31,6 @@ async def sync_command_tree(self):
     for guild_id in get_guild_ids():
         await self._command_tree.sync(guild=discord.Object(id=guild_id))
 
-    await asyncio.sleep(0.1)
-
 
 class BotClient(discord.Client):
     def __init__(self, *args, **kwargs):

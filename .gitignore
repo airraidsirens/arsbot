@@ -17,3 +17,4 @@ arsbot.service
 *.sublime-*
 .ruff_cache
 dist/
+.mypy_cache/
