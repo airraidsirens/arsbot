@@ -19,7 +19,12 @@ parser = argparse.ArgumentParser(
     prog="arsbot",
     description="Runs ARS bot.",
 )
-parser.add_argument("--action", choices=["runbot", "initdb"], default="runbot", help="Which action to run")
+parser.add_argument(
+    "--action",
+    choices=["runbot", "initdb"],
+    default="runbot",
+    help="Which action to run",
+)
 
 
 def initdb():
