@@ -5,6 +5,17 @@ import tempfile
 
 import pytest
 
+from arsbot.core.db import bot_session
+from arsbot.models.base import BotBase
+
+
+@pytest.fixture
+def sql_session(bot_env_config):
+    with bot_session() as session:
+        BotBase.metadata.create_all(session.bind)
+
+        yield session
+
 
 @pytest.fixture
 def bot_data_dir():
