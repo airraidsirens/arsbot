@@ -4,11 +4,7 @@ from urllib.parse import parse_qs
 import pytest
 import responses
 
-from arsbot.phpbb.http import (
-    _login_to_phpbb,
-    PhpBBAuthError,
-    BanAction,
-)
+from arsbot.discord.phpbb import api_client
 
 from tests.conftest import read_test_file
 
@@ -58,8 +54,20 @@ def _post_login_callback(username, password, request):
     return (200, headers, content)
 
 
+@pytest.fixture(autouse=True)
+def patch_api_client(bot_data_dir):
+    old_session_file = str(api_client.PHPBB_SESSION_FILE)
+
+    phpbb_session_file = bot_data_dir / "phpbb_session.data"
+    api_client.PHPBB_SESSION_FILE = str(phpbb_session_file)
+
+    yield
+
+    api_client.PHPBB_SESSION_FILE = old_session_file
+
+
 @responses.activate
-def test_login_to_phpbb_fails_wrong_password(bot_env_config, patch_phpbb):
+def test_login_to_phpbb_fails_wrong_password(bot_env_config):
     bot_env_config("PHPBB_PASSWORD", "invalid")
 
     params = {
@@ -83,14 +91,14 @@ def test_login_to_phpbb_fails_wrong_password(bot_env_config, patch_phpbb):
         callback=partial(_post_login_callback, "testuser", "testpass"),
     )
 
-    with pytest.raises(PhpBBAuthError) as error:
-        _login_to_phpbb()
+    with pytest.raises(api_client.PhpBBAuthError) as error:
+        api_client._login_to_phpbb()
 
     assert error.value.args == ("Invalid username/password",)
 
 
 @responses.activate
-def test_login_to_phpbb_fails_missing_error(bot_env_config, patch_phpbb):
+def test_login_to_phpbb_fails_missing_error(bot_env_config):
     params = {
         "mode": "login",
         "redirect": "index.php",
@@ -112,14 +120,14 @@ def test_login_to_phpbb_fails_missing_error(bot_env_config, patch_phpbb):
         callback=partial(_post_login_callback, "testuser_wrong", "testpass_wrong"),
     )
 
-    with pytest.raises(PhpBBAuthError) as error:
-        _login_to_phpbb()
+    with pytest.raises(api_client.PhpBBAuthError) as error:
+        api_client._login_to_phpbb()
 
     assert error.value.args == ("Unable to get error message: list index out of range",)
 
 
 @responses.activate
-def test_login_to_phpbb_succeeds(bot_env_config, patch_phpbb):
+def test_login_to_phpbb_succeeds(bot_env_config):
     params = {
         "mode": "login",
         "redirect": "index.php",
@@ -141,7 +149,7 @@ def test_login_to_phpbb_succeeds(bot_env_config, patch_phpbb):
         callback=partial(_post_login_callback, "testuser", "testpass"),
     )
 
-    session, logged_in = _login_to_phpbb()
+    session, logged_in = api_client._login_to_phpbb()
     assert logged_in is True
 
     assert session.sid == "sid1"
@@ -153,7 +161,7 @@ def test_login_to_phpbb_succeeds(bot_env_config, patch_phpbb):
         callback=_get_index_callback,
     )
 
-    session, logged_in = _login_to_phpbb()
+    session, logged_in = api_client._login_to_phpbb()
     assert logged_in is True
 
     assert session.sid == "sid1"
@@ -161,6 +169,6 @@ def test_login_to_phpbb_succeeds(bot_env_config, patch_phpbb):
 
 
 def test_ban_action_enum():
-    assert BanAction.BANUSER.value == "banuser"
-    assert BanAction.BANEMAIL.value == "banemail"
-    assert BanAction.BANIP.value == "banip"
+    assert api_client.BanAction.BANUSER.value == "banuser"
+    assert api_client.BanAction.BANEMAIL.value == "banemail"
+    assert api_client.BanAction.BANIP.value == "banip"

@@ -15,8 +15,8 @@ from bs4.element import Tag
 import msgpack
 import requests
 
-from ..version import VERSION
-from ..utils.ipinfo import get_ip_address_info
+from arsbot.version import VERSION
+from arsbot.utils.ipinfo import get_ip_address_info
 
 
 log = logging.getLogger("arsbot")

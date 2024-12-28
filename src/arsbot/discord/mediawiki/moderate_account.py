@@ -4,11 +4,11 @@ import discord
 from arsbot.core.db import bot_session
 from arsbot.models import MediaWikiAccountRequest
 
+from .api_client import process_account_request
 from ..utils import (
     send_to_debug,
     send_to_wiki_log,
 )
-from ...mediawiki.http2 import process_account_request
 
 
 async def handle_mediawiki_account(

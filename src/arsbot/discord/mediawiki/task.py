@@ -13,6 +13,10 @@ from arsbot.core.db import bot_session
 from arsbot.core.lock import MESSAGE_LOCK
 from arsbot.models import MediaWikiAccountRequest
 
+from .api_client import (
+    get_pending_accounts,
+    process_account_request,
+)
 from .automod import get_spam_categories_for_request
 from .channels import (
     get_requests_from_channel,
@@ -31,10 +35,6 @@ from ..utils import (
     send_to_debug,
     send_to_wiki_log,
     task_state,
-)
-from ...mediawiki.http2 import (
-    get_pending_accounts,
-    process_account_request,
 )
 
 

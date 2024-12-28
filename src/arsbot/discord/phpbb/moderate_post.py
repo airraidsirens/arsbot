@@ -6,13 +6,13 @@ import discord
 from arsbot.core.db import bot_session
 from arsbot.models import PhpbbPostRequest
 
+from .api_client import (
+    ban_user_by_username,
+    moderate_post,
+)
 from ..utils import (
     send_to_debug,
     send_to_forum_log,
-)
-from ...phpbb.http import (
-    ban_user_by_username,
-    moderate_post,
 )
 
 

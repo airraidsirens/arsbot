@@ -7,6 +7,10 @@ from discord.errors import DiscordServerError
 
 from arsbot.core.lock import MESSAGE_LOCK
 
+from .api_client import (
+    load_posts_awaiting_approval,
+    load_topics_awaiting_approval,
+)
 from .channels import (
     get_requests_from_channel,
     make_and_store_discord_request_message,
@@ -20,10 +24,6 @@ from ..const import (
     SYNC_LOOP_DELAY,
 )
 from ..utils import delete_non_bot_messages
-from ...phpbb.http import (
-    load_posts_awaiting_approval,
-    load_topics_awaiting_approval,
-)
 
 
 log = logging.getLogger("arsbot")
