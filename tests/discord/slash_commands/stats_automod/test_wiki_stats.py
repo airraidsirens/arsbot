@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
+from arsbot.core.db import bot_session
 from arsbot.models import MediaWikiAccountRequest
 from arsbot.discord.slash_commands.stats_automod.wiki_stats import _get_spam_scores
 from arsbot.utils.text_table import TextTable
@@ -27,10 +28,11 @@ def _make_generic_request(session: Session, acrid: int, biography: str) -> None:
     session.commit()
 
 
-def test_automod_wiki_stats(sql_session):
-    _make_generic_request(sql_session, 1, "This has spam <br> test")
+def test_automod_wiki_stats():
+    with bot_session() as session:
+        _make_generic_request(session, 1, "This has spam <br> test")
 
-    text = _get_spam_scores(session=sql_session, action=0)
+        text = _get_spam_scores(session=session, action=0)
 
     table = TextTable()
 

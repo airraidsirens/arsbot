@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
 
+from arsbot.core.db import bot_session
 from arsbot.models import PhpbbPostRequest
 
 
-def test_validate_config(sql_session):
+def test_validate_config():
     request = PhpbbPostRequest(
         id=1,
         author_id=2,
@@ -34,9 +35,11 @@ def test_validate_config(sql_session):
         handled_by_id=11,
         handled_by_name="handled_by_name_value",
     )
-    sql_session.add(request)
-    sql_session.commit()
-    assert (
-        f"{request}"
-        == "<PhpbbPostRequest self.post_id=3 self.is_for_new_topic=6 self.discord_message_id=7>"
-    )
+    with bot_session() as session:
+        session.add(request)
+        session.commit()
+
+        assert (
+            f"{request}"
+            == "<PhpbbPostRequest self.post_id=3 self.is_for_new_topic=6 self.discord_message_id=7>"
+        )

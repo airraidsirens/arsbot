@@ -9,12 +9,15 @@ from arsbot.core.db import bot_session
 from arsbot.models.base import BotBase
 
 
-@pytest.fixture
-def sql_session(bot_env_config):
+@pytest.fixture(autouse=True, scope="function")
+def _sql_session(bot_env_config):
     with bot_session() as session:
         BotBase.metadata.create_all(session.bind)
 
         yield session
+
+        for tbl in reversed(BotBase.metadata.sorted_tables):
+            session.execute(tbl.delete())
 
 
 @pytest.fixture
@@ -30,7 +33,7 @@ class Unset:
 
 
 @pytest.fixture(autouse=True, scope="function")
-def bot_env_config():
+def bot_env_config(bot_data_dir):
     test_config = {
         "WIKI_BASE_URL": "https://wiki.airraidsirens.net",
         "WIKI_USERNAME": "default",
@@ -47,7 +50,7 @@ def bot_env_config():
         "DISCORD_FORUM_TOPIC_REQUESTS_STATS_CHANNEL_ID": "0000000000000000007",
         "DISCORD_FORUM_LOGS_CHANNEL_ID": "0000000000000000007",
         "ERROR_LOG_DISCORD_URL": "https://invalid",
-        "BOT_SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+        "BOT_SQLALCHEMY_DATABASE_URI": f"sqlite:///{bot_data_dir}/testing.db",
         "ROLE_NAME": "default",
         "PHPBB_BASE_URL": "https://airraidsirens.net/forums",
         "PHPBB_USERNAME": "testuser",

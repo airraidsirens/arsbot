@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
 
+from arsbot.core.db import bot_session
 from arsbot.models import MediaWikiAccountRequest
 
 
-def test_validate_config(sql_session):
+def test_validate_config():
     request = MediaWikiAccountRequest(
         id=1,
         acrid=2,
@@ -21,9 +22,11 @@ def test_validate_config(sql_session):
         handled_by_id=7,
         handled_by_name="handled_by_name_value",
     )
-    sql_session.add(request)
-    sql_session.commit()
-    assert (
-        f"{request}"
-        == "<MediaWikiAccountRequest self.acrid=2 self.discord_message_id=3>"
-    )
+    with bot_session() as session:
+        session.add(request)
+        session.commit()
+
+        assert (
+            f"{request}"
+            == "<MediaWikiAccountRequest self.acrid=2 self.discord_message_id=3>"
+        )

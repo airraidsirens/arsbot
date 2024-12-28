@@ -101,14 +101,11 @@ class DiscordClient:
 
 
 @pytest.mark.asyncio
-async def test_handle_mediawiki_account_unknown_request_id(
-    bot_data_dir, bot_env_config
-):
+async def test_handle_mediawiki_account_unknown_request_id(bot_env_config):
     discord_client = DiscordClient()
     interaction = DiscordInteraction(response=DiscordResponse())
 
     test_config = {
-        "BOT_SQLALCHEMY_DATABASE_URI": f"sqlite:///{bot_data_dir}/testing.db",
         "DISCORD_BOT_DEBUG_CHANNEL": "1",
     }
 
@@ -220,14 +217,11 @@ def _post_wiki_confirm_account_not_found_callback(request):
 @pytest.mark.asyncio
 @responses.activate
 @pytest.mark.parametrize("approved", [True, False])
-async def test_handle_mediawiki_handle_account_request(
-    bot_data_dir, bot_env_config, approved
-):
+async def test_handle_mediawiki_handle_account_request(bot_env_config, approved):
     discord_client = DiscordClient()
     interaction = DiscordInteraction(response=DiscordResponse())
 
     test_config = {
-        "BOT_SQLALCHEMY_DATABASE_URI": f"sqlite:///{bot_data_dir}/testing.db",
         "DISCORD_BOT_DEBUG_CHANNEL": "1",
         "DISCORD_WIKI_LOGS_CHANNEL_ID": "2",
         "WIKI_BASE_URL": "https://wiki.airraidsirens.net",
@@ -334,14 +328,11 @@ async def test_handle_mediawiki_handle_account_request(
 @pytest.mark.asyncio
 @responses.activate
 @pytest.mark.parametrize("approved", [True, False])
-async def test_handle_mediawiki_account_request_failed(
-    bot_data_dir, bot_env_config, approved
-):
+async def test_handle_mediawiki_account_request_failed(bot_env_config, approved):
     discord_client = DiscordClient()
     interaction = DiscordInteraction(response=DiscordResponse())
 
     test_config = {
-        "BOT_SQLALCHEMY_DATABASE_URI": f"sqlite:///{bot_data_dir}/testing.db",
         "DISCORD_BOT_DEBUG_CHANNEL": "1",
         "DISCORD_WIKI_LOGS_CHANNEL_ID": "2",
         "WIKI_BASE_URL": "https://wiki.airraidsirens.net",
