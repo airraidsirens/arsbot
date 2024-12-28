@@ -140,7 +140,7 @@ async def handle_automod_requests():
             session.query(MediaWikiAccountRequest)
             .filter(MediaWikiAccountRequest.automod_spam_categories.isnot(None))
             .filter(MediaWikiAccountRequest.automod_manual_review_set_at.is_(None))
-            .filter(MediaWikiAccountRequest.time_created >= in_48h)
+            .filter(MediaWikiAccountRequest.time_created < in_48h)
             .filter(MediaWikiAccountRequest.time_resolved.is_(None))
             .all()
         )
