@@ -18,6 +18,12 @@ class MWSession(requests.Session):
     pass
 
 
+class PhpBBLoginFailed(Exception):
+    def __init__(self, response, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.response = response
+
+
 def _extract_login_form(form: Tag):
     form_fields = {}
 
@@ -74,7 +80,8 @@ def _login_to_mediawiki(force_fresh: bool = False):
 
     url = f"{base_url}/index.php?title=Special:UserLogin"
     response = session.get(url)
-    assert response.status_code == 200
+    if response.status_code != 200:
+        raise PhpBBLoginFailed(response)
 
     login_page = BeautifulSoup(response.text, features="html.parser")
 

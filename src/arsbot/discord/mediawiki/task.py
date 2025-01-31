@@ -15,6 +15,7 @@ from arsbot.models import MediaWikiAccountRequest
 
 from .api_client import (
     get_pending_accounts,
+    PhpBBLoginFailed,
     process_account_request,
 )
 from .automod import get_spam_categories_for_request
@@ -223,7 +224,11 @@ async def run_mediawiki_task_once(now: float):
 
         known_request_ids |= _get_automod_requests()
 
-        pending_mediawiki_accounts = get_pending_accounts()
+        try:
+            pending_mediawiki_accounts = get_pending_accounts()
+        except PhpBBLoginFailed as exc:
+            log.exception(f"Failed to login to PHPBB: {exc}")
+            return
 
         known_acrids = set()
         for href, account in pending_mediawiki_accounts.items():
