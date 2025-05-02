@@ -106,7 +106,7 @@ async def send_connect_message(local_client):
 async def discord_runner():
     bot_token = os.environ["DISCORD_BOT_TOKEN"]
 
-    bot_state.on_ready_hooks.append(send_connect_message)
+    # bot_state.on_ready_hooks.append(send_connect_message)
 
     async with client:
         await client.login(bot_token)
