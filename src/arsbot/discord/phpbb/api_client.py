@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 import msgpack
 import requests
+from forcediphttpsadapter.adapters import ForcedIPHTTPSAdapter
 
 from arsbot.version import VERSION
 from arsbot.utils.ipinfo import get_ip_address_info
@@ -44,6 +45,8 @@ def on_request_end(session, response, *args, **kwargs):
 
 class PhpBBSession(requests.Session):
     def __init__(self, *args, **kwargs):
+        self._base_url = kwargs.pop("base_url", None)
+
         super().__init__(*args, **kwargs)
 
         on_request_end_with_session = functools.partial(on_request_end, self)
@@ -51,6 +54,19 @@ class PhpBBSession(requests.Session):
         self.hooks["response"].append(on_request_end_with_session)
 
         self.headers.update(DEFAULT_HEADERS)
+
+    def request(self, method, url, **kwargs) -> requests.Response:
+        if url.startswith("https://") or url.startswith("http://"):
+            print(f"GOT HTTP REQUEST in PhpBBSession.request: {method} {url}")
+            return super().request(method, url, **kwargs)
+
+        parsed_url = urlparse(self._base_url)
+        hostname = parsed_url.netloc
+
+        new_url = f"{parsed_url.scheme}://{hostname}{parsed_url.path}{url}"
+        url = new_url
+
+        return super().request(method, url, **kwargs)
 
     def save_session(self):
         # log.debug('Saving session!')
@@ -149,8 +165,7 @@ def _load_session(session: PhpBBSession) -> bool:
 
 
 def _validate_session(session: PhpBBSession) -> bool:
-    base_url = os.environ["PHPBB_BASE_URL"]
-    response = session.get(f"{base_url}/")
+    response = session.get("/")
     index_page = BeautifulSoup(response.text, features="html.parser")
 
     footer = index_page.find(id="wrapfooter")
@@ -173,7 +188,11 @@ def _extract_form_fields(form: Tag):
 
 
 def _login_to_phpbb(force_fresh: bool = False):
-    session = PhpBBSession()
+    base_url = os.environ["PHPBB_BASE_URL"]
+    session = PhpBBSession(base_url=base_url)
+
+    if base_ip := os.environ.get("PHPBB_IP"):
+        session.mount(base_url, ForcedIPHTTPSAdapter(dest_ip=base_ip))
 
     if force_fresh:
         try:
@@ -189,15 +208,14 @@ def _login_to_phpbb(force_fresh: bool = False):
 
     session.cookies.clear()
 
-    base_url = os.environ["PHPBB_BASE_URL"]
-
     params = {
         "mode": "login",
         "redirect": "index.php",
     }
-    url = f"{base_url}/ucp.php"
+    url = "/ucp.php"
     response = session.get(url, params=params)
-    assert response.status_code == 200
+    # print(response.text)
+    assert response.status_code == 200, response.status_code
 
     # Reload again cuz phpbb is weird..
     response = session.get(url, params=params)
@@ -241,7 +259,7 @@ def _login_to_phpbb(force_fresh: bool = False):
         "sid": login_form_fields["sid"],
         "login": "Login",
     }
-    url = f"{base_url}/ucp.php"
+    url = "/ucp.php"
     response = session.post(url, params=params, data=login_form)
 
     logged_in_page = BeautifulSoup(response.text, features="html.parser")
@@ -250,6 +268,7 @@ def _login_to_phpbb(force_fresh: bool = False):
         try:
             error_message = logged_in_page.select("form")[1].find(class_="error").text
         except Exception as exc:
+            print(response.text)
             raise PhpBBAuthError(f"Unable to get error message: {exc}")
         else:
             raise PhpBBAuthError(error_message)
@@ -318,9 +337,7 @@ def _extract_user_details(session: PhpBBSession, topic_approval_request: dict):
         "user_group_list": "",
     }
 
-    base_url = os.environ["PHPBB_BASE_URL"]
-
-    author_response = session.get(f'{base_url}{topic_approval_request["author_url"]}')
+    author_response = session.get(topic_approval_request["author_url"])
     assert author_response.ok
 
     author_page = BeautifulSoup(author_response.text, features="html.parser")
@@ -370,16 +387,12 @@ def _extract_post_details(session: PhpBBSession, topic_approval_request: dict):
         "post_ip_organization": "",
     }
 
-    base_url = os.environ["PHPBB_BASE_URL"]
-
     query_args = parse_qs(urlparse(topic_approval_request["topic_url"]).query)
     post_id = int(query_args["p"][0])
     post_details["post_id"] = post_id
 
     # Pull more details on the post itself (IP & content)
-    moderate_post_view_url = (
-        f"{base_url}/mcp.php?i=queue&mode=approve_details&p={post_id}"
-    )
+    moderate_post_view_url = f"/mcp.php?i=queue&mode=approve_details&p={post_id}"
     moderate_post_response = session.get(moderate_post_view_url)
     assert moderate_post_response.ok
     moderate_post_page = BeautifulSoup(
@@ -457,9 +470,7 @@ def _extract_topic_details(session: PhpBBSession, topic_approval_request: dict):
         "last_approved_post_date": "",
     }
 
-    base_url = os.environ["PHPBB_BASE_URL"]
-
-    topic_url = f'{base_url}{topic_approval_request["topic_url"]}'
+    topic_url = topic_approval_request["topic_url"]
     topic_response = session.get(topic_url)
     assert topic_response.ok
 
@@ -468,7 +479,7 @@ def _extract_topic_details(session: PhpBBSession, topic_approval_request: dict):
     topic_href = topic_page.find(id="pageheader").select_one("a").attrs["href"]
     topic_id = int(parse_qs(urlparse(topic_href).query)["t"][0])
 
-    topic_url = f"{base_url}/viewtopic.php"
+    topic_url = "/viewtopic.php"
     topic_params = {
         "t": topic_id,
     }
@@ -487,7 +498,7 @@ def _extract_topic_details(session: PhpBBSession, topic_approval_request: dict):
     for cur_page_number_neg in range(-int(last_page), 0):
         start_at = (abs(cur_page_number_neg) * 10) - 10
 
-        topic_url = f"{base_url}/viewtopic.php"
+        topic_url = "/viewtopic.php"
         topic_params = {
             "t": topic_id,
         }
@@ -506,7 +517,7 @@ def _extract_topic_details(session: PhpBBSession, topic_approval_request: dict):
         topic_details["last_approved_post_date"] = last_post_date
         return topic_details
 
-    log.error(f"Unable to find last post date for topic {topic_id}")
+    log.error(f"Unable to find last post date for topic {topic_id}: {topic_href}")
     return {}
 
 
@@ -515,9 +526,7 @@ def _load_posts_topics_awaiting_approval(
     mode: str,
     retried: bool = False,
 ) -> t.List[PhpBBPostRequest]:
-    base_url = os.environ["PHPBB_BASE_URL"]
-
-    url = f"{base_url}/mcp.php?i=mcp_queue&mode={mode}"
+    url = f"/mcp.php?i=mcp_queue&mode={mode}"
     response = session.get(url)
     assert response.ok, response.status_code
 
@@ -572,8 +581,6 @@ def _load_posts_topics_awaiting_approval(
 def _approve_moderated_post(
     session: PhpBBSession, response: requests.Response, post_id: int
 ) -> bool:
-    base_url = os.environ["PHPBB_BASE_URL"]
-
     moderate_post = BeautifulSoup(response.text, features="html.parser")
 
     moderate_form = moderate_post.select("form")[0]
@@ -604,7 +611,7 @@ def _approve_moderated_post(
     }
 
     confirm_moderate_post_response = session.post(
-        f"{base_url}/mcp.php",
+        "/mcp.php",
         params=params,
         data=form_data,
     )
@@ -637,8 +644,6 @@ def _reject_moderated_post(
     rejection_category: int,
     rejection_reason: str,
 ) -> bool:
-    base_url = os.environ["PHPBB_BASE_URL"]
-
     moderate_post = BeautifulSoup(response.text, features="html.parser")
 
     moderate_form = moderate_post.select("form")[0]
@@ -677,7 +682,7 @@ def _reject_moderated_post(
     }
 
     confirm_moderate_post_response = session.post(
-        f"{base_url}/mcp.php",
+        "/mcp.php",
         params=params,
         data=form_data,
     )
@@ -710,9 +715,7 @@ def _moderate_post(
     rejection_category: int = None,
     rejection_reason: str = None,
 ) -> bool:
-    base_url = os.environ["PHPBB_BASE_URL"]
-
-    url = f"{base_url}/mcp.php?i=queue&mode=approve_details&p={post_id}"
+    url = f"/mcp.php?i=queue&mode=approve_details&p={post_id}"
     response = session.get(url)
     assert response.ok
 
@@ -731,7 +734,7 @@ def _moderate_post(
         form_data["action[disapprove]"] = "Disapprove"
 
     moderate_post_response = session.post(
-        f"{base_url}/mcp.php",
+        "/mcp.php",
         params=params,
         data=form_data,
     )
@@ -757,9 +760,7 @@ def _login_to_adm(
     session: PhpBBSession,
     retried: bool = False,
 ):
-    base_url = os.environ["PHPBB_BASE_URL"]
-
-    index_url = f"{base_url}/index.php"
+    index_url = "/index.php"
 
     response = session.get(index_url)
 
@@ -791,7 +792,7 @@ def _login_to_adm(
         log.error(f"Unable to exctract adm sid: {exc}")
         return False
 
-    url = f"{base_url}/adm/index.php"
+    url = "/adm/index.php"
     params = {
         "sid": session_id,
     }
@@ -850,7 +851,7 @@ def _login_to_adm(
         "login": in_form_fields["login"],
     }
 
-    url = f"{base_url}/adm/index.php"
+    url = "/adm/index.php"
     params = {
         "sid": in_form_fields["sid"],
     }
@@ -900,9 +901,7 @@ def _ban_user(
     action: BanAction,
     retried: bool = False,
 ) -> bool:
-    base_url = os.environ["PHPBB_BASE_URL"]
-
-    index_url = f"{base_url}/adm/index.php"
+    index_url = "/adm/index.php"
     params = {
         "i": "users",
         "u": user_id,
@@ -951,7 +950,7 @@ def _ban_user(
     if getattr(action, "value", None) not in ban_reasons:
         raise ValueError(f"{action} is not a valid ban action")
 
-    ban_url = f"{base_url}/adm/index.php"
+    ban_url = "/adm/index.php"
     ban_params = {
         "i": "acp_users",
         "sid": session.sid,
@@ -1002,9 +1001,7 @@ def unban_username(username: str):
         log.error("failed to sign in to ADM")
         return
 
-    base_url = os.environ["PHPBB_BASE_URL"]
-
-    index_url = f"{base_url}/adm/index.php"
+    index_url = "/adm/index.php"
     params = {
         "i": "acp_ban",
         "mode": "user",

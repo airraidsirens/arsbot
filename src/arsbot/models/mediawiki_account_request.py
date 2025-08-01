@@ -103,3 +103,8 @@ class MediaWikiAccountRequest(BotBase):
         default=None,
         doc="Identifies when automod was overrode",
     )
+    automod_disabled = sa.Column(
+        sa.Boolean,
+        default=None,
+        doc="Whether or not automod was disabled when this request was received",
+    )

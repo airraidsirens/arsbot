@@ -4,8 +4,9 @@ import os
 import tempfile
 
 import pytest
+from sqlalchemy.orm import close_all_sessions
 
-from arsbot.core.db import bot_session
+from arsbot.core.db import bot_session, get_engine, set_engine
 from arsbot.models.base import BotBase
 
 
@@ -18,6 +19,12 @@ def _sql_session(bot_env_config):
 
         for tbl in reversed(BotBase.metadata.sorted_tables):
             session.execute(tbl.delete())
+
+    close_all_sessions()
+
+    if engine := get_engine():
+        engine.dispose(close=True)
+        set_engine(None)
 
 
 @pytest.fixture
@@ -38,6 +45,7 @@ def bot_env_config(bot_data_dir):
         "WIKI_BASE_URL": "https://wiki.airraidsirens.net",
         "WIKI_USERNAME": "default",
         "WIKI_PASSWORD": "default",
+        "WIKI_ENABLE_ACCOUNT_AUTOMOD": "1",
         "DISCORD_BOT_TOKEN": "default",
         "DISCORD_BOT_GUILD_IDS": "0000000000000000001",
         "DISCORD_BOT_DEBUG_CHANNEL": "0000000000000000002",

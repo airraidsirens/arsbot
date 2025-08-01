@@ -76,7 +76,15 @@ async def _process_new_account_request(acrid: int, href: str, account):
         account_request.handled_by_name,
     )
 
-    spam_categories = get_spam_categories_for_request(request)
+    want_automod = os.environ.get("WIKI_ENABLE_ACCOUNT_AUTOMOD")
+
+    if want_automod:
+        spam_categories = get_spam_categories_for_request(request)
+        account_request.automod_disabled = False
+    else:
+        spam_categories = set()
+        account_request.automod_disabled = True
+
     if spam_categories:
         account_request.automod_spam_categories = ",".join(
             [category.name for category in spam_categories]
@@ -227,7 +235,7 @@ async def run_mediawiki_task_once(now: float):
         try:
             pending_mediawiki_accounts = get_pending_accounts()
         except PhpBBLoginFailed as exc:
-            log.exception(f"Failed to login to PHPBB: {exc}")
+            log.exception(f"Failed to login to MediaWiki: {exc}")
             return
 
         known_acrids = set()
