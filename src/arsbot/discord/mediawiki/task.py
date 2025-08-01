@@ -80,8 +80,10 @@ async def _process_new_account_request(acrid: int, href: str, account):
 
     if want_automod:
         spam_categories = get_spam_categories_for_request(request)
+        account_request.automod_disabled = False
     else:
         spam_categories = set()
+        account_request.automod_disabled = True
 
     if spam_categories:
         account_request.automod_spam_categories = ",".join(
