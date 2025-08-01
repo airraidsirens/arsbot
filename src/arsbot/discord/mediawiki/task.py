@@ -76,7 +76,13 @@ async def _process_new_account_request(acrid: int, href: str, account):
         account_request.handled_by_name,
     )
 
-    spam_categories = get_spam_categories_for_request(request)
+    want_automod = os.environ.get("WIKI_ENABLE_ACCOUNT_AUTOMOD")
+
+    if want_automod:
+        spam_categories = get_spam_categories_for_request(request)
+    else:
+        spam_categories = set()
+
     if spam_categories:
         account_request.automod_spam_categories = ",".join(
             [category.name for category in spam_categories]
