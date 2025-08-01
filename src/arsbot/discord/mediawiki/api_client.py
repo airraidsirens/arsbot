@@ -7,6 +7,7 @@ import arrow
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 import requests
+from forcediphttpsadapter.adapters import ForcedIPHTTPSAdapter
 import msgpack
 
 
@@ -15,7 +16,23 @@ INVALID_SESSION_TEXT = "There seems to be a problem with your login session"
 
 
 class MWSession(requests.Session):
-    pass
+    def __init__(self, *args, **kwargs):
+        self._base_url = kwargs.pop("base_url", None)
+
+        super().__init__(*args, **kwargs)
+
+    def request(self, method, url, **kwargs) -> requests.Response:
+        if url.startswith("https://") or url.startswith("http://"):
+            print(f"GOT HTTP REQUEST in MWSession.request: {method} {url}")
+            return super().request(method, url, **kwargs)
+
+        parsed_url = urllib.parse.urlparse(self._base_url)
+        hostname = parsed_url.netloc
+
+        new_url = f"{parsed_url.scheme}://{hostname}{parsed_url.path}{url}"
+        url = new_url
+
+        return super().request(method, url, **kwargs)
 
 
 class PhpBBLoginFailed(Exception):
@@ -55,8 +72,7 @@ def _load_session(session):
 
 
 def _validate_session(session):
-    base_url = os.environ["WIKI_BASE_URL"]
-    response = session.get(base_url)
+    response = session.get("/")
     home_page = BeautifulSoup(response.text, features="html.parser")
     if home_page.find(id="pt-logout") is not None:
         return True
@@ -65,7 +81,11 @@ def _validate_session(session):
 
 
 def _login_to_mediawiki(force_fresh: bool = False):
-    session = MWSession()
+    base_url = os.environ["WIKI_BASE_URL"]
+    session = MWSession(base_url=base_url)
+
+    if base_ip := os.environ.get("WIKI_IP"):
+        session.mount(base_url, ForcedIPHTTPSAdapter(dest_ip=base_ip))
 
     if force_fresh:
         try:
@@ -76,9 +96,7 @@ def _login_to_mediawiki(force_fresh: bool = False):
     if _load_session(session) and _validate_session(session):
         return session, True
 
-    base_url = os.environ["WIKI_BASE_URL"]
-
-    url = f"{base_url}/index.php?title=Special:UserLogin"
+    url = "/index.php?title=Special:UserLogin"
     response = session.get(url)
     if response.status_code != 200:
         raise PhpBBLoginFailed(response)
@@ -107,7 +125,7 @@ def _login_to_mediawiki(force_fresh: bool = False):
         "force": "",
         "wpLoginToken": login_form_fields["wpLoginToken"],
     }
-    url = f"{base_url}/Special:UserLogin"
+    url = "/Special:UserLogin"
     response = session.post(url, params=login_form)
 
     logged_in_page = BeautifulSoup(response.text, features="html.parser")
@@ -171,16 +189,10 @@ def _get_accounts(session, url):
 def _load_account_requests(session):
     account_requests = {}
 
-    base_url = os.environ["WIKI_BASE_URL"]
-
-    next_link = (
-        f"{base_url}/index.php?title=Special:ConfirmAccounts/authors&wpShowHeld=0"
-    )
+    next_link = "/index.php?title=Special:ConfirmAccounts/authors&wpShowHeld=0"
 
     while next_link:
         accounts, next_link = _get_accounts(session, next_link)
-        if next_link and not next_link.startswith("https://"):
-            next_link = base_url + next_link
 
         account_requests.update(accounts)
 
@@ -190,8 +202,6 @@ def _load_account_requests(session):
 def create_account_from_request(
     session, email, request, response, response_page, retried
 ):
-    base_url = os.environ["WIKI_BASE_URL"]
-
     wp_edit_token = response_page.find("input", id="wpEditToken").attrs["value"]
 
     create_token = None
@@ -213,7 +223,7 @@ def create_account_from_request(
         "wpCreateaccountToken": create_token,
         "AccountRequestId": request.acrid,
     }
-    create_url = f"{base_url}/index.php?title=Special:CreateAccount&returnto=Special:ConfirmAccounts/authors"
+    create_url = "/index.php?title=Special:CreateAccount&returnto=Special:ConfirmAccounts/authors"
 
     create_response = session.post(create_url, params=form)
 
@@ -244,9 +254,9 @@ def process_account_request(
 
     session, logged_in = _login_to_mediawiki(force_fresh=retried)
 
-    base_url = os.environ["WIKI_BASE_URL"]
-
-    request_url = f"{base_url}/index.php?title=Special:ConfirmAccounts/authors&acrid={request.acrid}"
+    request_url = (
+        f"/index.php?title=Special:ConfirmAccounts/authors&acrid={request.acrid}"
+    )
     response = session.get(request_url)
 
     request_page = BeautifulSoup(response.text, features="html.parser")
@@ -270,7 +280,7 @@ def process_account_request(
         "wpEditToken": edit_token,
     }
 
-    update_url = f"{base_url}/Special:ConfirmAccounts/authors"
+    update_url = "/Special:ConfirmAccounts/authors"
     response = session.post(update_url, params=moderate_user_form)
 
     response_page = BeautifulSoup(response.text, features="html.parser")

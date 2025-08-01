@@ -27,6 +27,7 @@ dependencies = [
     "arrow>=1.3.0",
     "beautifulsoup4>=4.12.3",
     "discord-py>=2.4.0",
+    "forcediphttpsadapter>=1.1.0",
     "msgpack>=1.1.0",
     "python-dotenv>=1.0.1",
     "pyyaml>=6.0.2",

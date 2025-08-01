@@ -227,7 +227,7 @@ async def run_mediawiki_task_once(now: float):
         try:
             pending_mediawiki_accounts = get_pending_accounts()
         except PhpBBLoginFailed as exc:
-            log.exception(f"Failed to login to PHPBB: {exc}")
+            log.exception(f"Failed to login to MediaWiki: {exc}")
             return
 
         known_acrids = set()
