@@ -2,7 +2,8 @@
 
 set -eu -o pipefail
 
-VERSIONS=("3.10.16" "3.11.11" "3.12.8" "3.13.1")
+VERSION_LIST=$(yq eval -M -o csv '.jobs.build_and_test.strategy.matrix.python_version' .github/workflows/tests.yaml);
+VERSIONS=($(echo $VERSION_LIST | sed 's/,/ /g'));
 
 install_version() {
   version=$1;
